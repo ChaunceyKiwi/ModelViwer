@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>ModelViewer</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/7.0.2/css/bootstrap-slider.min.css" >
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+  <link rel="stylesheet" type="text/css" href="css/modelViewer.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r76/three.min.js"></script>
+  <script src="http://threejs.org/examples/js/loaders/OBJLoader.js"></script>
+  <script src="http://threejs.org/examples/js/controls/TrackballControls.js"></script>
+  <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/7.0.2/bootstrap-slider.min.js"></script>
+  <script src="js/FileSaver.min.js"></script>
+
+</head>
+
+<body>
+
+<nav class="navbar navbar-inverse navbar-static-top" style="background: #111111;">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">
+        <img alt="Brand" src="img/logo.png" style="width: 40px; margin-top: -10px; float:left;" >
+        &nbsp ModelViewer
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="row">
+  <div class="col-md-5 col-sm-5 col-lg-5"><div id="ModelSpace" class="col-md-12 col-sm-12 col-lg-12"></div></div>
+  <div class="col-md-4 col-sm-4 col-lg-4" id="MapSpace">
+    <canvas id="canvas" style="float:left;">
+      This text is displayed if your browser does not support HTML5 Canvas.
+    </canvas>
+
+    <div style="display:none;">
+      <img id="mapFrame" src="img/map.png">
+    </div>
+
+    <div style="float:right;">
+      <input id="heightCamera"  type="text" data-slider-id="B" data-slider-min="0" data-slider-max="300" data-slider-step="1" data-slider-value="150" data-slider-orientation="vertical" data-slider-tooltip="hide"/>
+      <input id="heightView"  type="text" data-slider-id="Y" data-slider-min="0" data-slider-max="300" data-slider-step="1" data-slider-value="300" data-slider-orientation="vertical" data-slider-tooltip="hide"/>
+      <br>
+      <button class="btn btn-danger" style="margin-top: 30px" onclick="removeLineAndPoint()">Reset</button><br>
+      <button class="btn btn-info" style="margin-top: 30px" onclick="saveFile()">Save</button>
+
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-3 col-lg-3" id="VideoSpace" style="margin-left: -35px"><div class="col-md-12 col-sm-12 col-lg-12">
+    <img src="img/video.gif" id="videoFrame">
+  </div></div>
+</div><br>
+
+<div class="gallery">
+  <div class="col-md-7 col-sm-7 col-lg-7">
+    <div class="thumbnails">
+      <img onmouseover="preview.src=img1.src" name="img1" src="images/img1.jpg" alt=""/>
+      <img onmouseover="preview.src=img2.src" name="img2" src="images/img2.jpg" alt=""/>
+      <img onmouseover="preview.src=img3.src" name="img3" src="images/img3.jpg" alt=""/>
+      <img onmouseover="preview.src=img4.src" name="img4" src="images/img4.jpg" alt=""/>
+      <img onmouseover="preview.src=img5.src" name="img5" src="images/img5.jpg" alt=""/><br>
+      <img onmouseover="preview.src=img1.src" name="img6" src="images/img1.jpg" alt=""/>
+      <img onmouseover="preview.src=img2.src" name="img7" src="images/img2.jpg" alt=""/>
+      <img onmouseover="preview.src=img3.src" name="img8" src="images/img3.jpg" alt=""/>
+      <img onmouseover="preview.src=img4.src" name="img9" src="images/img4.jpg" alt=""/>
+      <img onmouseover="preview.src=img5.src" name="img10" src="images/img5.jpg" alt=""/><br>
+      <img onmouseover="preview.src=img1.src" name="img11" src="images/img1.jpg" alt=""/>
+      <img onmouseover="preview.src=img2.src" name="img12" src="images/img2.jpg" alt=""/>
+      <img onmouseover="preview.src=img3.src" name="img13" src="images/img3.jpg" alt=""/>
+      <img onmouseover="preview.src=img4.src" name="img14" src="images/img4.jpg" alt=""/>
+      <img onmouseover="preview.src=img5.src" name="img15" src="images/img5.jpg" alt=""/>
+    </div>
+  </div>
+  <div class="col-md-5 col-sm-5 col-lg-5">
+    <div class="preview" align="center">
+      <img name="preview" src="images/img1.jpg" id="imgToStore" alt=""/>
+    </div>
+  </div>
+  <canvas id="canvasHide" style="visibility: hidden"></canvas>
+</div>
+
+<script>
+  var container, stats, controls, object;
+  var camera, scene, renderer;
+  var mouseX = 0, mouseY = 0;
+  var width = document.getElementById("ModelSpace").offsetWidth;
+  var height = window.innerHeight/2;
+  var mapWidth = width * 0.8 * 10 / 12 * 0.95;
+  var videoWidth = width * 0.6;
+  var eyePos, viewPos;
+  var maxEyeHeight = 300 , maxViewHeight = 300;
+  var initialEyeHeight = 150;
+  var geometry = new THREE.SphereGeometry( 2, 32, 32 );
+  var geometry2 = new THREE.SphereGeometry( 1, 32, 32 );
+  var material1 = new THREE.MeshBasicMaterial( {color: 0xFFC02B} );
+  var material2 = new THREE.MeshBasicMaterial( {color: 0x2BB8FF} );
+  var material3 = new THREE.MeshBasicMaterial( {color: 0xFF0000} );
+  var materialGreen = new THREE.MeshBasicMaterial( {color: 0x00FF00} );
+
+
+  var cameraOrAt = 0; // 0 to put camera, 1 to put position look at.
+  var mxInModel_camera;
+  var myInModel_camera;
+  var mzInModel_camera;
+  var mxInModel_LookAt;
+  var myInModel_LookAt;
+  var mzInModel_LookAt;
+
+  var lineIndex = 0;
+  var drawCount = 0;
+  var drawCountLooAt = 0;
+
+  var MAX_POINTS = 100;
+  var newPoint = [];
+  var newPointLookAt = [];
+  var geometryOfLine = new THREE.BufferGeometry();
+  var positionsOfLine = new Float32Array( MAX_POINTS * 3 ); // 3 vertices per point
+  geometryOfLine.addAttribute( 'position', new THREE.BufferAttribute( positionsOfLine, 3 ) );
+  geometryOfLine.setDrawRange( 0, drawCount );
+  var materialOfLine = new THREE.LineBasicMaterial( { color: 0xff0000, linewidth: 2 } );
+  var line = new THREE.Line( geometryOfLine,  materialOfLine );
+
+
+  var cameraChange = function(slideEvt) {
+    camera.position.z = maxEyeHeight - slideEvt.value;
+    eyePos.position.z = maxEyeHeight - slideEvt.value;
+
+  };
+
+  var viewChange = function(slideEvt) {
+    viewPos.position.z = maxViewHeight - slideEvt.value;
+  };
+
+  var heightCamera = $("#heightCamera").slider().on('slide', cameraChange);
+  var heightView = $("#heightView").slider().on('slide',viewChange);
+
+  document.getElementById("canvas").height = height;
+  document.getElementById("canvas").width = mapWidth;
+  document.getElementById("videoFrame").height = height;
+  document.getElementById("videoFrame").width = videoWidth;
+
+  init();
+  animate();
+
+  function init() {
+    container = document.createElement( 'modelViewer' );
+    document.getElementById("ModelSpace").appendChild( container );
+
+    camera = new THREE.PerspectiveCamera( 45, width / height, 1, 100000 );
+    camera.position.z = initialEyeHeight;
+
+    // scene
+    scene = new THREE.Scene();
+
+    var light1 = new THREE.PointLight( 0xffffff, 1);
+    light1.position.set(178.69, -15.43, 108.97);
+    scene.add( light1 );
+
+    var light2 = new THREE.PointLight( 0xffffff, 1);
+    light2.position.set(-227.92, -118.25, -29.05);
+    scene.add( light2 );
+
+    var light3 = new THREE.PointLight( 0xffffff, 1);
+    light3.position.set(94.86, 143.11, -52.78);
+    scene.add( light3 );
+
+    // texture
+    var manager = new THREE.LoadingManager();
+    manager.onProgress = function ( item, loaded, total ) {
+      console.log( item, loaded, total );
+    };
+
+    // model
+    var loader2 = new THREE.OBJLoader( manager );
+    loader2.load( 'models/house.obj', function ( object ) {
+      object.traverse( function ( child ) {
+        if ( child instanceof THREE.Mesh ) {
+          //child.material.map = texture;
+        }
+      } );
+      scene.add( object );
+    } );
+
+    viewPos = new THREE.Mesh( geometry, material1 );
+    eyePos = new THREE.Mesh( geometry, material2 );
+
+    scene.add( eyePos );
+    scene.add( viewPos );
+    scene.add( line );
+
+    line.geometry.attributes.position.needsUpdate = true; // required after the first render
+
+    camera.up.copy(new THREE.Vector3(0, 0, 1));
+    camera.lookAt(new THREE.Vector3(viewPos.position.x,viewPos.position.y,viewPos.position.z));
+
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize( width, height );
+    container.appendChild( renderer.domElement );
+    window.addEventListener( 'resize', onWindowResize, false );
+    controls = new THREE.TrackballControls( camera,container);
+
+    controls.rotationDampening        = .98;
+    controls.zoom                     = 40;
+    controls.zoomDampening            = .6;
+    controls.zoomCutoff               = .9;
+    controls.minZoom                  = 20;
+    controls.maxZoom                  = 80;
+    controls.zoomSpeed = 1;
+    controls.rotationSpeed            = 40;
+    controls.panSpeed = 0.24;
+
+    renderer.setClearColor( 0xa0a0a0 );
+  }
+
+  function onWindowResize() {
+    width = document.getElementById("ModelSpace").offsetWidth;
+    height = window.innerHeight/2;
+    mapWidth = width * 0.8 * 10 / 12 * 0.95;
+    videoWidth = width * 0.6;
+    camera.aspect =  width/ height;
+    document.getElementById("canvas").height = height;
+    document.getElementById("canvas").width = mapWidth;
+    document.getElementById("videoFrame").height = height;
+    document.getElementById("videoFrame").width = videoWidth;
+    initViewPoint();
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+  }
+
+  function animate() {
+    requestAnimationFrame( animate );
+    render();
+    line.geometry.attributes.position.needsUpdate = true; // required after the first render
+  }
+
+  function addPoint(x, y, z, x2, y2, z2){
+    newPoint[drawCount] = new THREE.Mesh( geometry2, material3);
+    newPoint[drawCount].position.x = x;
+    newPoint[drawCount].position.y = y;
+    newPoint[drawCount].position.z = z;
+
+    newPointLookAt[drawCountLooAt] = new THREE.Mesh( geometry2, materialGreen);
+    newPointLookAt[drawCountLooAt].position.x = x2;
+    newPointLookAt[drawCountLooAt].position.y = y2;
+    newPointLookAt[drawCountLooAt].position.z = z2;
+
+    scene.add( newPoint[drawCount] );
+    scene.add( newPointLookAt[drawCountLooAt] );
+
+    positionsOfLine[ lineIndex ++ ] = x;
+    positionsOfLine[ lineIndex ++ ] = y;
+    positionsOfLine[ lineIndex ++ ] = z;
+
+    var origin = newPoint[drawCount].position;
+    var target = newPointLookAt[drawCountLooAt].position;
+    var dir = new THREE.Vector3(target.x - origin.x, target.y - origin.y, target.z - origin.z);
+    dir = dir.normalize();
+
+    var length = 10;
+    var hex = 0xff0000;
+
+    var arrowHelper = new THREE.ArrowHelper( dir, origin, length, hex );
+    scene.add( arrowHelper );
+
+    drawCount++;
+    drawCountLooAt++;
+
+    geometryOfLine.setDrawRange( 0, drawCount );
+  }
+
+  function render() {
+    renderer.render( scene, camera );
+    controls.update();
+    camera.lookAt(new THREE.Vector3(viewPos.position.x,viewPos.position.y,viewPos.position.z));
+  }
+
+  function removeLineAndPoint(){
+    scene.remove(line);
+    var i;
+    for (i = 0; i < newPoint.length; i++) {
+      scene.remove( newPoint[i] );
+    }
+    clear(gctx);
+  }
+  function saveFile(){
+    var image = new Image();
+    image.src = document.getElementById("imgToStore").src;
+
+    var canvas = document.getElementById("canvasHide");
+    ctx = canvas.getContext("2d");
+    ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(function(blob) {
+      saveAs(blob, "pretty image.png");
+    });
+  }
+
+</script>
+
+<script type="text/javascript" src="js/movablePoint.js">
+
+</script>
+
+</body>
+</html>

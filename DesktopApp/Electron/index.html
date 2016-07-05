@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>ModelViewer</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/bootstrap-slider.min.css" >
+  <link rel="stylesheet" type="text/css" href="css/modelViewer.css">
+  <link rel="stylesheet" href="css/smalltalk.css">
+  <script src="js/three.min.js"></script>
+  <script src="js/OBJLoader.js"></script>
+  <script src="js/TrackballControls.js"></script>
+  <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+  <script src="js/jquery.js"></script>    
+  <script src="js/smalltalk.js"></script>
+  <script>if (window.module) module = window.module;</script>
+
+  <script src="js/bootstrap-slider.js"></script>
+</head>
+
+<body>
+
+<nav class="navbar navbar-inverse navbar-static-top" style="background: #111111;">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">
+        <img alt="Brand" src="img/logo.png" style="width: 40px; margin-top: -10px; float:left;" >
+        &nbsp ModelViewer
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="row">
+  <div class="col-md-5 col-sm-5 col-lg-5"><div id="ModelSpace" class="col-md-12 col-sm-12 col-lg-12"></div></div>
+  <div class="col-md-4 col-sm-4 col-lg-4" id="MapSpace">
+    <canvas id="canvas" style="float:left;">
+      This text is displayed if your browser does not support HTML5 Canvas.
+    </canvas>
+
+    <div style="display:none;">
+      <img id="mapFrame" src="img/map.png">
+    </div>
+
+    <div style="margin-left: 350px;margin-top: 30px">
+      <input id="heightCamera" type="text" data-slider-id="B" data-slider-min="0" data-slider-max="300" data-slider-step="1" data-slider-value="150" data-slider-orientation="vertical" data-slider-tooltip="hide"/>
+      <input id="heightView" type="text" data-slider-id="Y" data-slider-min="0" data-slider-max="300" data-slider-step="1" data-slider-value="300" data-slider-orientation="vertical" data-slider-tooltip="hide"/>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-3 col-lg-3" id="VideoSpace" style="margin-left: -35px;display:none;"><div class="col-md-12 col-sm-12 col-lg-12">
+    <img src="img/video.gif" id="videoFrame">
+  </div></div>
+</div>
+<br>
+<div class="col-md-5 col-sm-5 col-lg-5">
+  <button class="btn btn-warning" onclick="connect()">Connect</button>
+  <button class="btn btn-danger" onclick="process()">Process</button>
+  <button class="btn btn-info" onclick="next()">Next</button><br><br>
+  <button class="btn btn-success" onclick="takeOff()">Take off</button>
+  <button class="btn btn-primary" onclick="landing()">Landing</button>
+  <button class="btn btn-warning" onclick="hovering()">Hovering</button><br><br>
+  <button class="btn btn-danger" onclick="initPath()">initPath</button>
+  <button class="btn btn-success" onclick="sendPath()">sendPath</button>
+
+
+</div>
+
+<script type="text/javascript">
+    document.documentElement.style.overflow = 'hidden';  // firefox, chrome
+</script>>
+
+<script src="js/drawModel.js"></script>
+<script src="js/function.js"></script>
+<script src="js/movablePoint.js"></script>
+
+</body>
+</html>
